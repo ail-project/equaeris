@@ -1,0 +1,1 @@
+{"client":true,"start": "mongo mongodb://%ip:%port" ,"inputstart": "","authcheck": [["show dbs"],">"],"authcheck_success":"config","authcheck_fail": "","aggressive": [["use admin","db.auth(%u,%p)"],">"], "aggressive_success":"1", "aggressive_fail": "Error: Authentication failed."}
