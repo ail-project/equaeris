@@ -2,6 +2,8 @@ import xml.etree.ElementTree as ET
 import json
 import pexpect
 import time
+import requests
+from requests.auth import HTTPBasicAuth
 
 
 def parse_nmap(nmapfile):
@@ -35,66 +37,135 @@ def client_access_test(instructions, aggressive, ip, port):
     print(process)
     p = pexpect.spawn(process)
     time.sleep(1)
-    if instructions["inputstart"] != "":
-        p.expect(instructions["inputstart"])
-    for command in instructions["authcheck"][0]:
-        p.sendline(command)
-        p.expect(command)
-        p.expect(instructions["authcheck"][1])
-    authcheck = p.before.decode()
+
+    for command in instructions["authcheck"]:
+        p.send(command.encode())
+        p.sendcontrol('m')
     if instructions["authcheck_fail"] != "":
-        if instructions["authcheck_fail"] not in authcheck:
+        try:
+            p.expect(instructions["authcheck_fail"], timeout=2)
+            if aggressive:
+                return client_aggressive_access(instructions, p)
+            else:
+                return False, None
+
+        except pexpect.exceptions.TIMEOUT:
             return True, None
-        elif not aggressive:
-            return False, None
-        else:
-            return client_aggressive_access(instructions, p)
+
     elif instructions["authcheck_success"] != "":
-        if instructions["authcheck_success"] in authcheck:
+        try:
+            p.expect(instructions["authcheck_success"], timeout=2)
             return True, None
-        elif not aggressive:
-            return False, None
-        else:
-            return client_aggressive_access(instructions, p)
+        except pexpect.exceptions.TIMEOUT:
+            if aggressive:
+                return client_aggressive_access(instructions, p)
+            else:
+                return False, None
 
 
 def client_aggressive_access(instructions, p):
-    for command in instructions["aggressive"][0]:
+    result = []
+    for command in instructions["aggressive"]:
         if "%u" in command:
             command = command.replace("%u", "\"admin\"")
+            result.append("admin")
         if "%p" in command:
             command = command.replace("%p", "\"admin\"")
-        p.sendline(command)
-    for i in range(len(instructions["aggressive"][0])):
-        p.expect(instructions["aggressive"][1])
-    authcheck = p.before.decode()
+            result.append("admin")
+        p.send(command.encode())
+        p.sendcontrol('m')
+
     if instructions["aggressive_fail"] != "":
-        if instructions["aggressive_fail"] not in authcheck:
-            return True, ("admin","admin")
-        else:
+        try:
+            p.expect(instructions["aggressive_fail"], timeout=2)
             return False, None
+        except pexpect.exceptions.TIMEOUT:
+            return True, result
+
     elif instructions["aggressive_success"] != "":
-        if instructions["aggressive_success"] in authcheck:
-            return True, ("admin","admin")
-        else:
+        try:
+            p.expect(instructions["aggressive_success"], timeout=2)
+            return True, result
+        except pexpect.exceptions.TIMEOUT:
             return False, None
 
 
-def command_access_test(instructions, aggressive, ip, port):
-    pass
+def url_access_test(instructions, aggressive, ip, port):
+    url = instructions["start"]
+    if "%ip" in url:
+        url = url.replace("%ip", ip)
+    if "%port" in url:
+        url = url.replace("%port", port)
+    print(url)
+    url += instructions["authcheck"][0]
+    r = requests.get(url)
+    if instructions["authcheck_fail"] != "":
+        if instructions["authcheck_fail"] in r.json():
+            if aggressive:
+                return url_aggressive_access(instructions, ip, port)
+            else:
+                return False, None
+
+        else:
+            return True, None
+
+    elif instructions["authcheck_success"] != "":
+        if instructions["authcheck_success"] in r.json():
+            return True, None
+        else:
+            if aggressive:
+                return url_aggressive_access(instructions, ip, port)
+            else:
+                return False, None
+
+
+def url_aggressive_access(instructions, ip, port):
+    url = instructions["aggressive"][0]
+    if "%ip" in url:
+        url = url.replace("%ip", ip)
+    if "%port" in url:
+        url = url.replace("%port", port)
+    if "%u" in url:
+        url = url.replace("%u", "admin")
+    if "%p" in url:
+        url = url.replace("%p", "admin")
+    if instructions["basic_auth"]:
+        r = requests.get(url, auth=HTTPBasicAuth('elastic','elastic'))
+    else:
+        r = requests.get(url)
+    if instructions["aggressive_fail"] != "":
+        if instructions["aggressive_fail"] in r.json():
+            return False, None
+        else:
+            return True, ("admin", "admin")
+
+    elif instructions["aggressive_success"] != "":
+        if instructions["aggressive_success"] in r.json():
+            return True, ("admin", "admin")
+        else:
+            return False, None
 
 
 def access_test(service, aggressive, ip, port):
-    with open(service + "_access.json", 'r') as json_file:
+    with open("access.json", 'r') as json_file:
         json_data = json_file.readline()
-        instructions = json.loads(json_data)
+        data = json.loads(json_data)
+        instructions = data[service]
     if instructions["client"]:
         return client_access_test(instructions, aggressive, ip, port)
     else:
-        command_access_test(instructions, aggressive, ip, port)
+        return url_access_test(instructions, aggressive, ip, port)
 
 
 liste = parse_nmap("nmap.xml")
 database_check(liste)
 
-print(access_test("mongoDB", True, "127.0.0.1", "27017"))
+#print(access_test("mongoDB", False, "127.0.0.1", "27017"))
+print(access_test("redis", False, "127.0.0.1", "6379"))
+#print(access_test("mongoDB", True, "127.0.0.1", "27017"))
+print(access_test("redis", True, "127.0.0.1", "6379"))
+print(access_test("elastic", True, "127.0.0.1", "9200"))
+print(access_test("elastic", False, "127.0.0.1", "9200"))
+print(access_test("couchDB", True, "127.0.0.1", "5984"))
+print(access_test("couchDB", False, "127.0.0.1", "5984"))
+
