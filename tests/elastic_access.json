@@ -1,0 +1,1 @@
+{"client":false,"start": "http://%ip:%port" ,"authcheck": ["/_aliases"], "basic_auth":true, "authcheck_success":"","authcheck_fail": "error","aggressive": ["http://%ip:%port/_aliases"], "aggressive_success":"", "aggressive_fail": "error"}

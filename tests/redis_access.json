@@ -1,0 +1,1 @@
+{"client":true,"start":"redis-cli -h %ip -p %port","authcheck": ["keys *"],"authcheck_success":"","authcheck_fail": "NOAUTH","aggressive": ["AUTH %p"], "aggressive_success":"OK", "aggressive_fail": "error"}

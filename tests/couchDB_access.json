@@ -1,0 +1,1 @@
+{"client":false,"start": "http://%ip:%port" ,"authcheck": ["/_all_dbs"],"basic_auth":false, "authcheck_success":"_users","authcheck_fail": "error","aggressive": ["http://%u:%p@%ip:%port/_all_dbs"], "aggressive_success":"_users", "aggressive_fail": "error"}
