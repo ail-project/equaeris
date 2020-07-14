@@ -1,4 +1,6 @@
 import requests
+
+
 url = 'http://127.0.0.1:9200'
 r = requests.get(url + '/_aliases')
 data = r.json()
