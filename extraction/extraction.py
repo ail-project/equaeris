@@ -1,6 +1,5 @@
 import pymongo
 import redis
-import json
 from bson.json_util import dumps
 
 def dump_contents(data,outputfile):
