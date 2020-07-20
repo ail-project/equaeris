@@ -139,9 +139,9 @@ def access_test(service, aggressive, ip, port):
 liste = parse_nmap("nmap.xml")
 database_check(liste)
 
-# print(access_test("mongoDB", False, "127.0.0.1", "27017"))
+print(access_test("mongoDB", False, "127.0.0.1", "27017"))
 print(access_test("redis", False, "127.0.0.1", "6379"))
-# print(access_test("mongoDB", True, "127.0.0.1", "27017"))
+print(access_test("mongoDB", True, "127.0.0.1", "27017"))
 print(access_test("redis", True, "127.0.0.1", "6379"))
 print(access_test("elastic", True, "127.0.0.1", "9200"))
 print(access_test("elastic", False, "127.0.0.1", "9200"))

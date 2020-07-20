@@ -1,10 +1,71 @@
 import pymongo
 import redis
+import requests
+import json
 from bson.json_util import dumps
+from requests.auth import HTTPBasicAuth
 
-def dump_contents(data,outputfile):
-    with open(outputfile,'w') as outfile:
+
+def dump_contents(data, outputfile):
+    with open(outputfile, 'w') as outfile:
         outfile.write(dumps(data))
+
+
+def extract_couchdb(ip, port, credentials=None):
+    result = {}
+
+    if credentials is not None:
+        url = 'http://%s:%s@%s:%s' % (credentials[0], credentials[1], ip, port)
+    else:
+        url = 'http://%s:%s' % (ip, port)
+    r = requests.get(url + '/_all_dbs')
+    data = r.json()
+    for database in data:
+        if database[0] != '_':
+            result[database] = []
+            r = requests.get(url + '/' + database + '/_all_docs')
+            data = r.json()
+            try:
+                data["rows"]
+            except KeyError:
+                print("Database requires authentication")
+                return
+            for doc in data["rows"]:
+                iden = doc["id"]
+                r = requests.get(url + '/' + database + '/' + iden)
+                data = r.json()
+                result[database].append(data)
+                if "_attachments" in data:
+                    attachments = data["_attachments"]
+                    for file in attachments:
+                        r = requests.get(url + '/' + database + '/' + iden + '/' + file)
+                        outputfile = file
+                        open(outputfile, "wb").write(r.content)
+
+    return result
+
+
+def extract_elastic(ip, port, credentials=None):
+    result = {}
+
+    if credentials is not None:
+        authentication = HTTPBasicAuth(credentials[0], credentials[1])
+    else:
+        authentication = None
+    url = 'http://%s:%s' % (ip, port)
+    r = requests.get(url + '/_aliases', auth=authentication)
+    data = r.json()
+    for database in data:
+        if database[0] != '.' and database != "kibana_sample_data_logs":
+            r = requests.get(url + '/' + database + '/_search/?size=1000', auth=authentication)
+            try:
+                hits = r.json()["hits"]["hits"]
+            except KeyError:
+                print("Database requires authentication")
+                return
+            result[database] = hits
+
+    return result
 
 
 def extract_mongodb(ip, port, credentials=None):
@@ -32,6 +93,7 @@ def extract_mongodb(ip, port, credentials=None):
                 for x in col.find():
                     result[database][collection].append(x)
     return result
+
 
 def extract_redis(ip, port, password=None):
     result = {}
@@ -90,14 +152,25 @@ def extract_redis(ip, port, password=None):
     return result
 
 
-mapping = {"redis": extract_redis, "mongodb": extract_mongodb}
+mapping = {"redis": extract_redis, "mongodb": extract_mongodb, "elastic": extract_elastic, "couchdb": extract_couchdb}
+
+
+def pretty_print(dictionary):
+    print(dumps(dictionary, sort_keys=True, indent=4))
 
 
 def extract_database(database, ip, port, credentials=None):
-    return mapping[database](ip, port, credentials)
+    dictionary = mapping[database](ip, port, credentials)
+    pretty_print(dictionary)
+    return dictionary
 
 
-res2 = extract_database("redis", "127.0.0.1", "6379", ["admin"])
-res = extract_database("mongodb", "127.0.0.1", "27017", ["admin", "admin"])
-dump_contents(res,"mongoDB.out")
-dump_contents(res2,"redis.out")
+res = extract_database("redis", "127.0.0.1", "6379", ["admin"])
+res2 = extract_database("mongodb", "127.0.0.1", "27017", ["admin", "admin"])
+res3 = extract_database("elastic", "127.0.0.1", "9200", ["elastic", "elastic"])
+res4 = extract_database("couchdb", "127.0.0.1", "5984", ["admin", "admin"])
+
+dump_contents(res2, "mongoDB.out")
+dump_contents(res, "redis.out")
+dump_contents(res3, "elastic.out")
+dump_contents(res4, "couchdb.out")
