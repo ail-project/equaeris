@@ -1,7 +1,6 @@
 import pymongo
 import redis
 import requests
-import json
 from bson.json_util import dumps
 from requests.auth import HTTPBasicAuth
 

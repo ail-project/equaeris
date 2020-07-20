@@ -1,0 +1,47 @@
+parse_nmap(): returns a list containing all open ports, given an nmap xml file
+	Arguments:
+		string nmapfile - The path of the nmap xml file
+	Returns:
+		A list containing all open port numbers
+
+database_check(): checks database of targeted services if anyone of them is open and prints out the concerned services
+	Arguments:
+		list open_ports - A list containing all open port numbers
+	
+	Further requirements:
+		A ports.json file that contains the targeted services
+		format:
+		{"port_number":"service_name",...}
+
+access_test() tries to access a database using predefined commands
+	Arguments:
+		string service - The name of the targeted service
+		boolean aggressive - if set, function will try to access password protected database using predefined credentials
+		string ip - The ip at which the targeted database resides
+		string port - The port on which the targeted database runs
+	Returns:
+		Tuple where first element is a boolean: if true, database is accessible
+							if false, database is not accessible
+		   second element is a list of strings: contains either username and password, only password or is None if nothing has been found
+
+	Further requirements:
+		An access.json file that contains the commands and the name of each service followed by its specific access instructions:
+		"service_name": {access dictionary}
+
+		access dictionary format:
+		{
+			"client":true or false, based on whether the database requires a client to communicate with or provides a http REST API
+			,"start":string that is either the command that is used to start the client or the url that is used to access the REST API 
+			 (can contain the format parameters %ip and %port to show where IP and port will be used)
+			,"authcheck": list of commands or subdirectories that are used to check if a database is password protected
+			,"basic_auth": true or false, only used if REST API is provided and uses basic HTTP authentication
+			,"authcheck_success": substring contained in a response when the database isn't protected
+			,"authcheck_fail": substring contained in a response when the database is protected
+			 (Only one of the two previous options needs to be provided, put empty string if non-existant)
+			,"aggressive": list of commands or subdirectories that are used for authentication
+			 (can contain the format parameters %u and %p to show where username and password will be used)
+			,"aggressive_success": substring contained in a response when authentication has been successfull
+			,"aggressive_fail": substring contained in a response when authentication has failed
+		}
+
+

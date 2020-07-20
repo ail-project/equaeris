@@ -1,0 +1,13 @@
+dump_contents(): writes python dictionary in json format to a file
+	Arguments:
+		dictionary data - The dictionary that should be written in the json format to a file
+		string outputfile - The path of the file that the dictionary is written to
+
+extract_database(): extracts contents of database 
+	Arguments:
+		string database: the name of the database that is targeted
+		string ip - The ip at which the targeted database resides
+		string port - The port on which the targeted database runs
+		list credentials - list containing username and password or only password. By default None if database doesn't require credentials. 
+	Returns:
+		dictionary with the content of the database

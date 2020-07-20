@@ -122,7 +122,7 @@ def url_aggressive_access(instructions, ip, port):
             return False, None
 
 
-mapping = {"redis": redis_access_test, "mongoDB": mongodb_access_test}
+mapping = {"redis": redis_access_test, "mongodb": mongodb_access_test}
 
 
 def access_test(service, aggressive, ip, port):
