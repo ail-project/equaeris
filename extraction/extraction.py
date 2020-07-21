@@ -151,7 +151,7 @@ def extract_redis(ip, port, password=None):
     return result
 
 
-mapping = {"redis": extract_redis, "mongodb": extract_mongodb, "elastic": extract_elastic, "couchdb": extract_couchdb}
+mapping = {"redis": extract_redis, "mongoDB": extract_mongodb, "elastic": extract_elastic, "couchDB": extract_couchdb}
 
 
 def pretty_print(dictionary):
@@ -164,12 +164,14 @@ def extract_database(database, ip, port, credentials=None):
     return dictionary
 
 
+'''
 res = extract_database("redis", "127.0.0.1", "6379", ["admin"])
-res2 = extract_database("mongodb", "127.0.0.1", "27017", ["admin", "admin"])
+res2 = extract_database("mongoDB", "127.0.0.1", "27017", ["admin", "admin"])
 res3 = extract_database("elastic", "127.0.0.1", "9200", ["elastic", "elastic"])
-res4 = extract_database("couchdb", "127.0.0.1", "5984", ["admin", "admin"])
+res4 = extract_database("couchDB", "127.0.0.1", "5984", ["admin", "admin"])
 
 dump_contents(res2, "mongoDB.out")
 dump_contents(res, "redis.out")
 dump_contents(res3, "elastic.out")
-dump_contents(res4, "couchdb.out")
+dump_contents(res4, "couchDB.out")
+'''

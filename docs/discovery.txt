@@ -4,9 +4,12 @@ parse_nmap(): returns a list containing all open ports, given an nmap xml file
 	Returns:
 		A list containing all open port numbers
 
-database_check(): checks database of targeted services if anyone of them is open and prints out the concerned services
+database_check(): checks database of targeted services if anyone of them is open and returns the concerned services
 	Arguments:
 		list open_ports - A list containing all open port numbers
+	Returns:
+	    A dictionary with services mapped to ports
+	    format: {"service_name": "port"}
 	
 	Further requirements:
 		A ports.json file that contains the targeted services
@@ -45,3 +48,14 @@ access_test() tries to access a database using predefined commands
 		}
 
 
+automatic_discovery() automatically tries to access all databases present on one server
+    Arguments:
+        string nmap_file - The path of the nmap xml file
+        string ip - The ip at which the targeted server resides
+        boolean aggressive - if set, function will try to access password protected database using predefined credentials
+    Returns:
+        dictionary with the detailed results of each access try
+        format: {"service_name":("port",(boolean access_achieved,[credentials])), ...}
+
+    Further requirements:
+        Same as access_test and database_check

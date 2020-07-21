@@ -20,12 +20,15 @@ def parse_nmap(nmapfile):
 
 
 def database_check(open_ports):
+    result = []
     with open('ports.json', 'r') as json_file:
         json_data = json_file.readline()
         db_ports = json.loads(json_data)
         for port in open_ports:
             if port in db_ports:
-                print("Open", db_ports[port], "at port", port)
+                result.append((db_ports[port], port))
+                # print("Open", db_ports[port], "at port", port)
+    return result
 
 
 def client_access_test(instructions, aggressive, ip, port):
@@ -34,7 +37,7 @@ def client_access_test(instructions, aggressive, ip, port):
         process = process.replace("%ip", ip)
     if "%port" in process:
         process = process.replace("%port", port)
-    print(process)
+    # print(process)
     p = pexpect.spawn(process)
     time.sleep(1)
 
@@ -96,7 +99,7 @@ def url_access_test(instructions, aggressive, ip, port):
         url = url.replace("%ip", ip)
     if "%port" in url:
         url = url.replace("%port", port)
-    print(url)
+    # print(url)
     url += instructions["authcheck"][0]
     r = requests.get(url)
     if instructions["authcheck_fail"] != "":
@@ -157,14 +160,30 @@ def access_test(service, aggressive, ip, port):
         return url_access_test(instructions, aggressive, ip, port)
 
 
+def automatic_discovery(nmap_file, ip, aggressive):
+    result = {}
+    open_ports = parse_nmap(nmap_file)
+    database_ports = database_check(open_ports)
+    for port in database_ports:
+        result[port[0]] = (port[1],access_test(port[0], aggressive, ip, port[1]))
+    return result
+
+
+
+
+
+
+
+'''
 liste = parse_nmap("nmap.xml")
 database_check(liste)
 
-# print(access_test("mongoDB", False, "127.0.0.1", "27017"))
+print(access_test("mongoDB", False, "127.0.0.1", "27017"))
 print(access_test("redis", False, "127.0.0.1", "6379"))
-# print(access_test("mongoDB", True, "127.0.0.1", "27017"))
+print(access_test("mongoDB", True, "127.0.0.1", "27017"))
 print(access_test("redis", True, "127.0.0.1", "6379"))
 print(access_test("elastic", True, "127.0.0.1", "9200"))
 print(access_test("elastic", False, "127.0.0.1", "9200"))
 print(access_test("couchDB", True, "127.0.0.1", "5984"))
 print(access_test("couchDB", False, "127.0.0.1", "5984"))
+'''
