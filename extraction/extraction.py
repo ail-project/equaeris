@@ -153,23 +153,40 @@ def extract_redis(ip, port, password=None):
 
 mapping = {"redis": extract_redis, "mongoDB": extract_mongodb, "elastic": extract_elastic, "couchDB": extract_couchdb}
 
+index = 0
 
-def pretty_print(dictionary):
-    print(dumps(dictionary, sort_keys=True, indent=4))
+
+def pretty_print(dictionary, length):
+    global index
+    if type(dictionary) == dict:
+        for value in dictionary:
+            if type(dictionary[value]) == str or type(dictionary[value]) == int or type(dictionary[value]) == bool:
+                print(str(value) + ": " + str(dictionary[value]))
+                index += 1
+            elif type(dictionary[value]) == dict or type(dictionary[value]) == list:
+                pretty_print(dictionary[value],length)
+
+            if index >= length:
+                return
+    elif type(dictionary) == list:
+        for value in dictionary:
+            if type(value) == dict or type(value) == list:
+                pretty_print(value,length)
+
+
 
 
 def extract_database(database, ip, port, credentials=None):
     dictionary = mapping[database](ip, port, credentials)
-    pretty_print(dictionary)
+    pretty_print(dictionary,30)
     return dictionary
 
 
-'''
 res = extract_database("redis", "127.0.0.1", "6379", ["admin"])
-res2 = extract_database("mongoDB", "127.0.0.1", "27017", ["admin", "admin"])
-res3 = extract_database("elastic", "127.0.0.1", "9200", ["elastic", "elastic"])
+# res2 = extract_database("mongoDB", "127.0.0.1", "27017", ["admin", "admin"])
+# res3 = extract_database("elastic", "127.0.0.1", "9200", ["elastic", "elastic"])
 res4 = extract_database("couchDB", "127.0.0.1", "5984", ["admin", "admin"])
-
+'''
 dump_contents(res2, "mongoDB.out")
 dump_contents(res, "redis.out")
 dump_contents(res3, "elastic.out")
