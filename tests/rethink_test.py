@@ -36,5 +36,5 @@ def extract_rethinkdb(ip, port, credentials=None):
                     result[database][table].append(doc)
     return result
 
-
+print(rethinkdb_access_test(False,"127.0.0.1","28015"))
 print(extract_rethinkdb("127.0.0.1", "28015", ("admin", "admin")))
