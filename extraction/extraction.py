@@ -3,6 +3,10 @@ import redis
 import requests
 from bson.json_util import dumps
 from requests.auth import HTTPBasicAuth
+import rethinkdb
+import cassandra
+from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
 
 
 def dump_contents(data, outputfile):
@@ -41,6 +45,29 @@ def extract_couchdb(ip, port, credentials=None):
                         outputfile = file
                         open(outputfile, "wb").write(r.content)
 
+    return result
+
+
+def extract_cassandra(ip, port, credentials=None):
+    result = {}
+    if credentials is None:
+        cluster = Cluster([ip], port=port)
+    else:
+        auth = PlainTextAuthProvider(credentials[0], credentials[1])
+        cluster = Cluster([ip], port=port, auth_provider=auth)
+    cluster.connect()
+    for keyspace in cluster.metadata.keyspaces:
+        if "system" not in keyspace:
+            result[keyspace] = {}
+            session = cluster.connect(keyspace=keyspace)
+            session.row_factory = cassandra.query.dict_factory
+            act_keyspace = cluster.metadata.keyspaces[keyspace]
+            for table in act_keyspace.tables:
+                result[keyspace][table] = []
+                cql = 'Select * from ' + table
+                rows = session.execute(cql)
+                for row in rows:
+                    result[keyspace][table].append(row)
     return result
 
 
@@ -91,6 +118,26 @@ def extract_mongodb(ip, port, credentials=None):
                 col = db[collection]
                 for x in col.find():
                     result[database][collection].append(x)
+    return result
+
+
+def extract_rethinkdb(ip, port, credentials=None):
+    result = {}
+    r = rethinkdb.RethinkDB()
+    if credentials is not None:
+        r.connect(ip, int(port), user=credentials[0], password=credentials[1]).repl()
+    else:
+        r.connect(ip, int(port)).repl()
+    databases = r.db_list().run()
+    for database in databases:
+        if database != "rethinkdb":
+            result[database] = {}
+            tables = r.db(database).table_list().run()
+            for table in tables:
+                result[database][table] = []
+                cursor = r.db(database).table(table).run()
+                for doc in cursor:
+                    result[database][table].append(doc)
     return result
 
 
@@ -151,7 +198,8 @@ def extract_redis(ip, port, password=None):
     return result
 
 
-mapping = {"redis": extract_redis, "mongoDB": extract_mongodb, "elastic": extract_elastic, "couchDB": extract_couchdb}
+mapping = {"redis": extract_redis, "mongoDB": extract_mongodb, "elastic": extract_elastic, "couchDB": extract_couchdb,
+           "cassandradb": extract_cassandra, "rethinkdb": extract_rethinkdb}
 
 index = 0
 
@@ -164,21 +212,19 @@ def pretty_print(dictionary, length):
                 print(str(value) + ": " + str(dictionary[value]))
                 index += 1
             elif type(dictionary[value]) == dict or type(dictionary[value]) == list:
-                pretty_print(dictionary[value],length)
+                pretty_print(dictionary[value], length)
 
             if index >= length:
                 return
     elif type(dictionary) == list:
         for value in dictionary:
             if type(value) == dict or type(value) == list:
-                pretty_print(value,length)
-
-
+                pretty_print(value, length)
 
 
 def extract_database(database, ip, port, credentials=None):
     dictionary = mapping[database](ip, port, credentials)
-    pretty_print(dictionary,30)
+    pretty_print(dictionary, 30)
     return dictionary
 
 
