@@ -1,1 +1,1 @@
-{"5984": "couchDB","6379": "redis","27017": "mongoDB","9200": "elasticsearch"}
+{"5984": "couchdb","6379": "redis","27017": "mongodb","9200": "elasticsearch", "9042": "cassandradb","28015": "rethinkdb"}

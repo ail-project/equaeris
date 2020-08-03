@@ -1,0 +1,36 @@
+This file contains the different ways to configure the included databases and add authorization for easier testing
+
+couchDB:
+Go to GUI on http://localhost:5984/_utils/ and log in. You can change the password (user management) or remove it (config)
+Defaultpass ?
+No you need to enter your own username and password but no length requirement for password
+Default credentials used in discovery: u = "admin", p = "admin"
+
+redis:
+Open /etc/redis/redis.conf and change line requirepass which is followed by the password
+Defaultpass ?
+No you need to enter your own password but no length requirement for password
+Default credentials used in discovery: p = "admin"
+
+mongoDB:
+--auth option when starting the server to enable authentication. Password can be set with db.createUser()
+Defaultpass ?
+No you need to enter your own username and password but no length requirement for password
+Default credentials used in discovery: u = "admin", p = "admin"
+
+elasticsearch:
+change line xpack.security.enabled : true. Password can then be set manually
+Defaultpass ?
+No you need to enter your own username and password and password cannot be too short
+Default credentials used in discovery: u = "elastic", p = "elastic"
+
+rethinkDB:
+change password in the GUI on port 8080 by typing r.db('rethinkdb').table('users').get('admin').update({password:"secret"})
+Defaultpass ?
+No you need to enter your own username and password but no length requirement for password
+Default credentials used in discovery: u = "admin", p = "admin"
+
+cassandraDB:
+set authenticator: PasswordAuthenticator and authorizer: CassandraAuthorizer
+Defaultpass ?
+Yes if you don't change it, u = "cassandra", p = "cassandra"
