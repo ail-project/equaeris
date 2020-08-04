@@ -198,7 +198,7 @@ def extract_redis(ip, port, password=None):
     return result
 
 
-mapping = {"redis": extract_redis, "mongoDB": extract_mongodb, "elastic": extract_elastic, "couchDB": extract_couchdb,
+mapping = {"redis": extract_redis, "mongodb": extract_mongodb, "elastic": extract_elastic, "couchdb": extract_couchdb,
            "cassandradb": extract_cassandra, "rethinkdb": extract_rethinkdb}
 
 index = 0
@@ -223,15 +223,23 @@ def pretty_print(dictionary, length):
 
 
 def extract_database(database, ip, port, credentials=None):
+    global index
+    index = 0
     dictionary = mapping[database](ip, port, credentials)
     pretty_print(dictionary, 30)
     return dictionary
 
+'''
+res = extract_database("mongodb","127.0.0.1","27017")
+dump_contents(res,"mongoDB.json")
+res1 = extract_database("cassandradb","127.0.0.1","9042",["cassandra","cassandra"])
+dump_contents(res1,"cassandraDB.json")
+'''
 
-res = extract_database("redis", "127.0.0.1", "6379", ["admin"])
+# res = extract_database("redis", "127.0.0.1", "6379", ["admin"])
 # res2 = extract_database("mongoDB", "127.0.0.1", "27017", ["admin", "admin"])
 # res3 = extract_database("elastic", "127.0.0.1", "9200", ["elastic", "elastic"])
-res4 = extract_database("couchDB", "127.0.0.1", "5984", ["admin", "admin"])
+# res4 = extract_database("couchDB", "127.0.0.1", "5984", ["admin", "admin"])
 '''
 dump_contents(res2, "mongoDB.out")
 dump_contents(res, "redis.out")

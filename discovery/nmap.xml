@@ -1,38 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE nmaprun>
 <?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
-<!-- Nmap 7.80 scan initiated Mon Aug  3 16:54:23 2020 as: nmap -oX nmap.xml -p 0-30000 localhost -->
-<nmaprun scanner="nmap" args="nmap -oX nmap.xml -p 0-30000 localhost" start="1596466463" startstr="Mon Aug  3 16:54:23 2020" version="7.80" xmloutputversion="1.04">
-<scaninfo type="connect" protocol="tcp" numservices="30001" services="0-30000"/>
+<!-- Nmap 7.80 scan initiated Tue Aug  4 16:25:28 2020 as: nmap -oX nmap.xml -p 1-30000 localhost -->
+<nmaprun scanner="nmap" args="nmap -oX nmap.xml -p 1-30000 localhost" start="1596551128" startstr="Tue Aug  4 16:25:28 2020" version="7.80" xmloutputversion="1.04">
+<scaninfo type="connect" protocol="tcp" numservices="30000" services="1-30000"/>
 <verbose level="0"/>
 <debugging level="0"/>
-<host starttime="1596466463" endtime="1596466463"><status state="up" reason="conn-refused" reason_ttl="0"/>
+<host starttime="1596551128" endtime="1596551129"><status state="up" reason="conn-refused" reason_ttl="0"/>
 <address addr="127.0.0.1" addrtype="ipv4"/>
 <hostnames>
 <hostname name="localhost" type="user"/>
 <hostname name="localhost" type="PTR"/>
 </hostnames>
-<ports><extraports state="closed" count="29986">
-<extrareasons reason="conn-refused" count="29986"/>
+<ports><extraports state="closed" count="29992">
+<extrareasons reason="conn-refused" count="29992"/>
 </extraports>
 <port protocol="tcp" portid="111"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="rpcbind" method="table" conf="3"/></port>
 <port protocol="tcp" portid="631"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="ipp" method="table" conf="3"/></port>
-<port protocol="tcp" portid="4369"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="epmd" method="table" conf="3"/></port>
-<port protocol="tcp" portid="5984"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="couchdb" method="table" conf="3"/></port>
 <port protocol="tcp" portid="6379"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="redis" method="table" conf="3"/></port>
 <port protocol="tcp" portid="6942"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="unknown" method="table" conf="3"/></port>
 <port protocol="tcp" portid="7000"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="afs3-fileserver" method="table" conf="3"/></port>
 <port protocol="tcp" portid="7199"><state state="open" reason="syn-ack" reason_ttl="0"/></port>
-<port protocol="tcp" portid="8080"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="http-proxy" method="table" conf="3"/></port>
 <port protocol="tcp" portid="9042"><state state="open" reason="syn-ack" reason_ttl="0"/></port>
-<port protocol="tcp" portid="9200"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="wap-wsp" method="table" conf="3"/></port>
-<port protocol="tcp" portid="9300"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="vrace" method="table" conf="3"/></port>
 <port protocol="tcp" portid="27017"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="mongod" method="table" conf="3"/></port>
-<port protocol="tcp" portid="28015"><state state="open" reason="syn-ack" reason_ttl="0"/></port>
-<port protocol="tcp" portid="29015"><state state="open" reason="syn-ack" reason_ttl="0"/></port>
 </ports>
-<times srtt="56" rttvar="47" to="100000"/>
+<times srtt="68" rttvar="64" to="100000"/>
 </host>
-<runstats><finished time="1596466463" timestr="Mon Aug  3 16:54:23 2020" elapsed="0.36" summary="Nmap done at Mon Aug  3 16:54:23 2020; 1 IP address (1 host up) scanned in 0.36 seconds" exit="success"/><hosts up="1" down="0" total="1"/>
+<runstats><finished time="1596551129" timestr="Tue Aug  4 16:25:29 2020" elapsed="0.34" summary="Nmap done at Tue Aug  4 16:25:29 2020; 1 IP address (1 host up) scanned in 0.34 seconds" exit="success"/><hosts up="1" down="0" total="1"/>
 </runstats>
 </nmaprun>

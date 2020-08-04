@@ -159,5 +159,3 @@ def automatic_discovery(nmap_file, ip, aggressive):
     for port in database_ports:
         result[port[0]] = (port[1], access_test(port[0], aggressive, ip, port[1]))
     return result
-
-print(automatic_discovery('nmap.xml',"127.0.0.1", True))
