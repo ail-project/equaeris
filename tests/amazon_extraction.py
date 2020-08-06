@@ -12,4 +12,4 @@ def extract_bucket(bucketname):
             file = child.text
             r1 = requests.get(url + file)
             print(file , ":" , r1.text)
-extract_bucket("advent-bucket-one")
+extract_bucket("ims-photos")
