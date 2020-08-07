@@ -9,6 +9,16 @@ from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 
 
+class DatabaseAuthenticationError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+class DatabaseConnectionError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 def dump_contents(data, outputfile):
     with open(outputfile, 'w') as outfile:
         outfile.write(dumps(data))
@@ -16,12 +26,14 @@ def dump_contents(data, outputfile):
 
 def extract_couchdb(ip, port, credentials=None):
     result = {}
-
     if credentials is not None:
         url = 'http://%s:%s@%s:%s' % (credentials[0], credentials[1], ip, port)
     else:
         url = 'http://%s:%s' % (ip, port)
-    r = requests.get(url + '/_all_dbs')
+    try:
+        r = requests.get(url + '/_all_dbs')
+    except requests.exceptions.ConnectionError:
+        raise DatabaseConnectionError("no couchDB instance found running at this address")
     data = r.json()
     for database in data:
         if database[0] != '_':
@@ -31,8 +43,7 @@ def extract_couchdb(ip, port, credentials=None):
             try:
                 data["rows"]
             except KeyError:
-                print("Database requires authentication")
-                return
+                raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
             for doc in data["rows"]:
                 iden = doc["id"]
                 r = requests.get(url + '/' + database + '/' + iden)
@@ -79,7 +90,10 @@ def extract_elastic(ip, port, credentials=None):
     else:
         authentication = None
     url = 'http://%s:%s' % (ip, port)
-    r = requests.get(url + '/_aliases', auth=authentication)
+    try:
+        r = requests.get(url + '/_aliases', auth=authentication)
+    except requests.exceptions.ConnectionError:
+        raise DatabaseConnectionError("no elasticsearch instance found running at this address")
     data = r.json()
     for database in data:
         if database[0] != '.' and database != "kibana_sample_data_logs":
@@ -87,8 +101,7 @@ def extract_elastic(ip, port, credentials=None):
             try:
                 hits = r.json()["hits"]["hits"]
             except KeyError:
-                print("Database requires authentication")
-                return
+                raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
             result[database] = hits
 
     return result
@@ -102,12 +115,13 @@ def extract_mongodb(ip, port, credentials=None):
     else:
         url = "mongodb://%s:%s" % (ip, port)
 
-    myclient = pymongo.MongoClient(url)
+    myclient = pymongo.MongoClient(url,serverSelectionTimeoutMS=5000)
     try:
         databases = myclient.list_database_names()
     except pymongo.errors.OperationFailure:
-        print("database requires authentication")
-        return
+        raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
+    except pymongo.errors.ServerSelectionTimeoutError:
+        raise DatabaseConnectionError("no mongoDB instance found running at this address")
     for database in databases:
         if database not in ["admin", "config", "local"]:
             result[database] = {}
@@ -125,9 +139,16 @@ def extract_rethinkdb(ip, port, credentials=None):
     result = {}
     r = rethinkdb.RethinkDB()
     if credentials is not None:
-        r.connect(ip, int(port), user=credentials[0], password=credentials[1]).repl()
+        try:
+            r.connect(ip, int(port), user=credentials[0], password=credentials[1]).repl()
+        except rethinkdb.errors.ReqlDriverError:
+            raise DatabaseConnectionError("no rethinkDB instance found running at this address")
     else:
-        r.connect(ip, int(port)).repl()
+        try:
+            r.connect(ip, int(port)).repl()
+        except rethinkdb.errors.ReqlDriverError:
+            raise DatabaseConnectionError("no rethinkDB instance found running at this address")
+
     databases = r.db_list().run()
     for database in databases:
         if database != "rethinkdb":
@@ -150,8 +171,9 @@ def extract_redis(ip, port, password=None):
     try:
         keyspace = r.info("keyspace")
     except redis.exceptions.AuthenticationError:
-        print("database requires authentication")
-        return
+        raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
+    except redis.exceptions.ConnectionError:
+        raise DatabaseConnectionError("no redis instance found running at this address")
     for space in keyspace:
         result[space] = {}
 
@@ -228,6 +250,9 @@ def extract_database(database, ip, port, credentials=None):
     dictionary = mapping[database](ip, port, credentials)
     pretty_print(dictionary, 30)
     return dictionary
+
+
+extract_database("elastic","127.0.0.1","222")
 
 '''
 res = extract_database("mongodb","127.0.0.1","27017")

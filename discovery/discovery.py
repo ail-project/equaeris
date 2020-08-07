@@ -10,6 +10,11 @@ from cassandra.auth import PlainTextAuthProvider
 import rethinkdb
 
 
+class DatabaseConnectionError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 def parse_nmap(nmapfile):
     tree = ET.parse(nmapfile)
     root = tree.getroot()
@@ -37,7 +42,10 @@ def database_check(open_ports):
 
 def couchdb_access_test(aggressive, ip, port):
     url = 'http://' + ip + ':' + port + '/_all_dbs'
-    r = requests.get(url)
+    try:
+        r = requests.get(url)
+    except requests.exceptions.ConnectionError:
+        raise DatabaseConnectionError("no couchDB instance found running at this address")
     res = r.json()
     if 'error' in res:
         if aggressive:
@@ -56,7 +64,10 @@ def couchdb_access_test(aggressive, ip, port):
 
 def elastic_access_test(aggressive, ip, port):
     url = 'http://' + ip + ':' + port + '/_aliases'
-    r = requests.get(url)
+    try:
+        r = requests.get(url)
+    except requests.exceptions.ConnectionError:
+        raise DatabaseConnectionError("no elasticsearch instance found running at this address")
     res = r.json()
     if 'error' in res:
         if aggressive:
@@ -86,6 +97,8 @@ def rethinkdb_access_test(aggressive, ip, port):
                 return False, None
         else:
             return False, None
+    except rethinkdb.errors.ReqlDriverError:
+        raise DatabaseConnectionError("no rethinkDB instance found running at this address")
 
 
 def cassandra_access_test(aggressive, ip, port):
@@ -108,7 +121,7 @@ def cassandra_access_test(aggressive, ip, port):
 
 def mongodb_access_test(aggressive, ip, port):
     url = "mongodb://%s:%s" % (ip, port)
-    myclient = pymongo.MongoClient(url)
+    myclient = pymongo.MongoClient(url, serverSelectionTimeoutMS=5000)
     try:
         myclient.list_database_names()
         return True, None
@@ -124,6 +137,8 @@ def mongodb_access_test(aggressive, ip, port):
                 return False, None
         else:
             return False, None
+    except pymongo.errors.ServerSelectionTimeoutError:
+        raise DatabaseConnectionError("no mongoDB instance found running at this address")
 
 
 def redis_access_test(aggressive, ip, port):
@@ -142,6 +157,8 @@ def redis_access_test(aggressive, ip, port):
                 return False, None
         else:
             return False, None
+    except redis.exceptions.ConnectionError:
+        raise DatabaseConnectionError("no redis instance found running at this address")
 
 
 mapping = {"redis": redis_access_test, "mongodb": mongodb_access_test, "rethinkdb": rethinkdb_access_test,

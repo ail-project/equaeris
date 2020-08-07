@@ -13,7 +13,7 @@ Running automatic_discovery on aggressive mode and providing a nmap xml file to 
 ```
 This is simply achieved by calling this function:
 ```python
- automatic_discovery('nmap.xml',"IP", True)
+automatic_discovery('nmap.xml',"IP", True)
  ```
  #### specific access functions
  Another way to achieve this result would be to call the specific access functions individually
@@ -53,11 +53,23 @@ ip = "127.0.0.1"
 databases = discovery.automatic_discovery("nmap.xml",ip,True)  
 for pair in databases:  
     database = databases[pair]  
-    if(database[1][0]):  
+    if database[1][0]:  
         output = extraction.extract_database(pair,ip,database[0],database[1][1])  
         outputfile = pair + ".json"  
 	extraction.dump_contents(output,outputfile)
 ```
+
+## Extension
+The project can be easily extended by writing either discovery or extraction functions for certain database services.
+After putting them into their respective scripts, update the mapping dictionary to let it point to the correct function.
+An access_test function should always return the same format (boolean access_achieved, list of strings credentials or None if no credentials are needed).
+An extraction function should simply return a dictionary that represents the database
+
+## Issues
+I haven't been able to test the script for really big databases but it probably will fill up memory and crash if the content is above a few gigabytes. Works however fine if the database is smaller
+
+## Dependencies
+The scripts require python drivers for the databases that they exploit. 
 
 
 
