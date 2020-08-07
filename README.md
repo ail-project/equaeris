@@ -69,7 +69,7 @@ An extraction function should simply return a dictionary that represents the dat
 I haven't been able to test the script for really big databases but it probably will fill up memory and crash if the content is above a few gigabytes. Works however fine if the database is smaller
 
 ## Dependencies
-The scripts require python drivers for the databases that they exploit. 
+The scripts require python drivers for the databases that they exploit except for elasticsearch and couchDB where the requests library is required
 
 
 
