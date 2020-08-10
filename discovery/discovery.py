@@ -106,17 +106,22 @@ def cassandra_access_test(aggressive, ip, port):
     try:
         cluster.connect()
         return True, None
-    except cassandra.cluster.NoHostAvailable:
-        if not aggressive:
-            return False, None
-        else:
-            auth = PlainTextAuthProvider("cassandra", "cassandra")
-            cluster = Cluster([ip], port=int(port), auth_provider=auth)
-            try:
-                cluster.connect()
-                return True, ("cassandra", "cassandra")
-            except cassandra.cluster.NoHostAvailable:
+    except cassandra.cluster.NoHostAvailable as err:
+        print(type(err.errors[ip+":"+port]))
+        if type(err.errors[ip+":"+port]) == cassandra.AuthenticationFailed:
+            if not aggressive:
                 return False, None
+            else:
+                auth = PlainTextAuthProvider("cassandra", "cassandra")
+                cluster = Cluster([ip], port=int(port), auth_provider=auth)
+                try:
+                    cluster.connect()
+                    return True, ("cassandra", "cassandra")
+                except cassandra.cluster.NoHostAvailable:
+                    return False, None
+        elif type(err.errors[ip+":"+port]) == ConnectionRefusedError:
+            raise DatabaseConnectionError("no cassandraDB instance found running at this address")
+
 
 
 def mongodb_access_test(aggressive, ip, port):
@@ -176,3 +181,6 @@ def automatic_discovery(nmap_file, ip, aggressive):
     for port in database_ports:
         result[port[0]] = (port[1], access_test(port[0], aggressive, ip, port[1]))
     return result
+
+
+print(cassandra_access_test(True,"127.0.0.1",""))

@@ -33,7 +33,7 @@ def extract_couchdb(ip, port, credentials=None):
     try:
         r = requests.get(url + '/_all_dbs')
     except requests.exceptions.ConnectionError:
-        raise DatabaseConnectionError("no couchDB instance found running at this address")
+        raise DatabaseConnectionError("No couchDB instance found running at this address")
     data = r.json()
     for database in data:
         if database[0] != '_':
@@ -66,7 +66,14 @@ def extract_cassandra(ip, port, credentials=None):
     else:
         auth = PlainTextAuthProvider(credentials[0], credentials[1])
         cluster = Cluster([ip], port=port, auth_provider=auth)
-    cluster.connect()
+    try:
+        cluster.connect()
+    except cassandra.cluster.NoHostAvailable as err:
+        print(err)
+        if type(err.errors[ip + ":" + port]) == cassandra.AuthenticationFailed:
+            raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
+        elif type(err.errors[ip+":"+port]) == ConnectionRefusedError:
+            raise DatabaseConnectionError("No cassandraDB instance found running at this address")
     for keyspace in cluster.metadata.keyspaces:
         if "system" not in keyspace:
             result[keyspace] = {}
@@ -93,7 +100,7 @@ def extract_elastic(ip, port, credentials=None):
     try:
         r = requests.get(url + '/_aliases', auth=authentication)
     except requests.exceptions.ConnectionError:
-        raise DatabaseConnectionError("no elasticsearch instance found running at this address")
+        raise DatabaseConnectionError("No elasticsearch instance found running at this address")
     data = r.json()
     for database in data:
         if database[0] != '.' and database != "kibana_sample_data_logs":
@@ -121,7 +128,7 @@ def extract_mongodb(ip, port, credentials=None):
     except pymongo.errors.OperationFailure:
         raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
     except pymongo.errors.ServerSelectionTimeoutError:
-        raise DatabaseConnectionError("no mongoDB instance found running at this address")
+        raise DatabaseConnectionError("No mongoDB instance found running at this address")
     for database in databases:
         if database not in ["admin", "config", "local"]:
             result[database] = {}
@@ -141,13 +148,18 @@ def extract_rethinkdb(ip, port, credentials=None):
     if credentials is not None:
         try:
             r.connect(ip, int(port), user=credentials[0], password=credentials[1]).repl()
+        except rethinkdb.errors.ReqlAuthError:
+            raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
         except rethinkdb.errors.ReqlDriverError:
-            raise DatabaseConnectionError("no rethinkDB instance found running at this address")
+            raise DatabaseConnectionError("No rethinkDB instance found running at this address")
     else:
         try:
             r.connect(ip, int(port)).repl()
+        except rethinkdb.errors.ReqlAuthError:
+            raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
         except rethinkdb.errors.ReqlDriverError:
-            raise DatabaseConnectionError("no rethinkDB instance found running at this address")
+            raise DatabaseConnectionError("No rethinkDB instance found running at this address")
+
 
     databases = r.db_list().run()
     for database in databases:
@@ -173,7 +185,7 @@ def extract_redis(ip, port, password=None):
     except redis.exceptions.AuthenticationError:
         raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
     except redis.exceptions.ConnectionError:
-        raise DatabaseConnectionError("no redis instance found running at this address")
+        raise DatabaseConnectionError("No redis instance found running at this address")
     for space in keyspace:
         result[space] = {}
 
@@ -252,7 +264,7 @@ def extract_database(database, ip, port, credentials=None):
     return dictionary
 
 
-extract_database("elastic","127.0.0.1","222")
+extract_database("cassandradb","127.0.0.1","9042",["cassandra","cassandra"])
 
 '''
 res = extract_database("mongodb","127.0.0.1","27017")
