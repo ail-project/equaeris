@@ -24,8 +24,9 @@ def dump_contents(data, outputfile):
         outfile.write(dumps(data))
 
 
-def extract_couchdb(ip, port, credentials=None):
+def extract_couchdb(ip, port, credentials=None, max_elements=5000):
     result = {}
+    count = 0
     if credentials is not None:
         url = 'http://%s:%s@%s:%s' % (credentials[0], credentials[1], ip, port)
     else:
@@ -49,6 +50,9 @@ def extract_couchdb(ip, port, credentials=None):
                 r = requests.get(url + '/' + database + '/' + iden)
                 data = r.json()
                 result[database].append(data)
+                count += 1
+                if count > max_elements:
+                    return result
                 if "_attachments" in data:
                     attachments = data["_attachments"]
                     for file in attachments:
@@ -59,8 +63,9 @@ def extract_couchdb(ip, port, credentials=None):
     return result
 
 
-def extract_cassandra(ip, port, credentials=None):
+def extract_cassandra(ip, port, credentials=None, max_elements=5000):
     result = {}
+    count = 0
     if credentials is None:
         cluster = Cluster([ip], port=port)
     else:
@@ -72,7 +77,7 @@ def extract_cassandra(ip, port, credentials=None):
         print(err)
         if type(err.errors[ip + ":" + port]) == cassandra.AuthenticationFailed:
             raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
-        elif type(err.errors[ip+":"+port]) == ConnectionRefusedError:
+        elif type(err.errors[ip + ":" + port]) == ConnectionRefusedError:
             raise DatabaseConnectionError("No cassandraDB instance found running at this address")
     for keyspace in cluster.metadata.keyspaces:
         if "system" not in keyspace:
@@ -86,12 +91,15 @@ def extract_cassandra(ip, port, credentials=None):
                 rows = session.execute(cql)
                 for row in rows:
                     result[keyspace][table].append(row)
+                    count += 1
+                    if count >= max_elements:
+                        return result
     return result
 
 
-def extract_elastic(ip, port, credentials=None):
+def extract_elastic(ip, port, credentials=None, max_elements=5000):
     result = {}
-
+    count = 0
     if credentials is not None:
         authentication = HTTPBasicAuth(credentials[0], credentials[1])
     else:
@@ -110,19 +118,21 @@ def extract_elastic(ip, port, credentials=None):
             except KeyError:
                 raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
             result[database] = hits
-
+            count += len(hits)
+            if count >= max_elements:
+                return result
     return result
 
 
-def extract_mongodb(ip, port, credentials=None):
+def extract_mongodb(ip, port, credentials=None, max_elements=5000):
     result = {}
-
+    count = 0
     if credentials is not None:
         url = "mongodb://%s:%s@%s:%s" % (credentials[0], credentials[1], ip, port)
     else:
         url = "mongodb://%s:%s" % (ip, port)
 
-    myclient = pymongo.MongoClient(url,serverSelectionTimeoutMS=5000)
+    myclient = pymongo.MongoClient(url, serverSelectionTimeoutMS=5000)
     try:
         databases = myclient.list_database_names()
     except pymongo.errors.OperationFailure:
@@ -139,11 +149,15 @@ def extract_mongodb(ip, port, credentials=None):
                 col = db[collection]
                 for x in col.find():
                     result[database][collection].append(x)
+                    count += 1
+                    if count >= max_elements:
+                        return result
     return result
 
 
-def extract_rethinkdb(ip, port, credentials=None):
+def extract_rethinkdb(ip, port, credentials=None, max_elements=5000):
     result = {}
+    count = 0
     r = rethinkdb.RethinkDB()
     if credentials is not None:
         try:
@@ -160,7 +174,6 @@ def extract_rethinkdb(ip, port, credentials=None):
         except rethinkdb.errors.ReqlDriverError:
             raise DatabaseConnectionError("No rethinkDB instance found running at this address")
 
-
     databases = r.db_list().run()
     for database in databases:
         if database != "rethinkdb":
@@ -171,11 +184,15 @@ def extract_rethinkdb(ip, port, credentials=None):
                 cursor = r.db(database).table(table).run()
                 for doc in cursor:
                     result[database][table].append(doc)
+                    count += 1
+                    if count >= max_elements:
+                        return result
     return result
 
 
-def extract_redis(ip, port, password=None):
+def extract_redis(ip, port, password=None, max_elements=5000):
     result = {}
+    count = 0
     if password is not None:
         r = redis.StrictRedis(ip, int(port), password=password[0])
     else:
@@ -229,6 +246,10 @@ def extract_redis(ip, port, password=None):
                     nonbinzset.append(value.decode())
                 result[space][key.decode()] = nonbinzset
 
+            count += 1
+            if count >= max_elements:
+                return result
+
     return result
 
 
@@ -256,15 +277,15 @@ def pretty_print(dictionary, length):
                 pretty_print(value, length)
 
 
-def extract_database(database, ip, port, credentials=None):
+def extract_database(database, ip, port, credentials=None, max_elements=5000):
     global index
     index = 0
-    dictionary = mapping[database](ip, port, credentials)
+    dictionary = mapping[database](ip, port, credentials, max_elements)
     pretty_print(dictionary, 30)
     return dictionary
 
 
-extract_database("cassandradb","127.0.0.1","9042",["cassandra","cassandra"])
+extract_database("cassandradb", "127.0.0.1", "9042", ["cassandra", "cassandra"])
 
 '''
 res = extract_database("mongodb","127.0.0.1","27017")
