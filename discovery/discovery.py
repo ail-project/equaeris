@@ -40,6 +40,18 @@ def database_check(open_ports):
     return result
 
 
+def bucket_access_test(bucketname):
+    url = "http://" + bucketname + ".s3.amazonaws.com/"
+    r = requests.get(url)
+    tree = ET.fromstring(r.text)
+    if tree[0].text == "AccessDenied":
+        return False
+    elif tree[0].text == "NoSuchBucket":
+        raise DatabaseConnectionError("Bucket does not exist")
+    else:
+        return True
+
+
 def couchdb_access_test(aggressive, ip, port):
     url = 'http://' + ip + ':' + port + '/_all_dbs'
     try:
@@ -107,8 +119,8 @@ def cassandra_access_test(aggressive, ip, port):
         cluster.connect()
         return True, None
     except cassandra.cluster.NoHostAvailable as err:
-        print(type(err.errors[ip+":"+port]))
-        if type(err.errors[ip+":"+port]) == cassandra.AuthenticationFailed:
+        print(type(err.errors[ip + ":" + port]))
+        if type(err.errors[ip + ":" + port]) == cassandra.AuthenticationFailed:
             if not aggressive:
                 return False, None
             else:
@@ -119,9 +131,8 @@ def cassandra_access_test(aggressive, ip, port):
                     return True, ("cassandra", "cassandra")
                 except cassandra.cluster.NoHostAvailable:
                     return False, None
-        elif type(err.errors[ip+":"+port]) == ConnectionRefusedError:
+        elif type(err.errors[ip + ":" + port]) == ConnectionRefusedError:
             raise DatabaseConnectionError("no cassandraDB instance found running at this address")
-
 
 
 def mongodb_access_test(aggressive, ip, port):
@@ -183,4 +194,4 @@ def automatic_discovery(nmap_file, ip, aggressive):
     return result
 
 
-print(cassandra_access_test(True,"127.0.0.1",""))
+print(bucket_access_test("ims-photos"))

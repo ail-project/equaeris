@@ -1,4 +1,6 @@
 import pymongo
+import os
+import xml.etree.ElementTree as ET
 import redis
 import requests
 from bson.json_util import dumps
@@ -72,7 +74,7 @@ def extract_cassandra(ip, port, credentials=None):
         print(err)
         if type(err.errors[ip + ":" + port]) == cassandra.AuthenticationFailed:
             raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
-        elif type(err.errors[ip+":"+port]) == ConnectionRefusedError:
+        elif type(err.errors[ip + ":" + port]) == ConnectionRefusedError:
             raise DatabaseConnectionError("No cassandraDB instance found running at this address")
     for keyspace in cluster.metadata.keyspaces:
         if "system" not in keyspace:
@@ -122,7 +124,7 @@ def extract_mongodb(ip, port, credentials=None):
     else:
         url = "mongodb://%s:%s" % (ip, port)
 
-    myclient = pymongo.MongoClient(url,serverSelectionTimeoutMS=5000)
+    myclient = pymongo.MongoClient(url, serverSelectionTimeoutMS=5000)
     try:
         databases = myclient.list_database_names()
     except pymongo.errors.OperationFailure:
@@ -142,6 +144,30 @@ def extract_mongodb(ip, port, credentials=None):
     return result
 
 
+def extract_bucket(bucketname, max_elements):
+    count = 0
+    path = os.path.dirname(__file__)
+    url = "http://" + bucketname + ".s3.amazonaws.com/"
+    r = requests.get(url)
+    tree = ET.fromstring(r.text)
+    if tree[0].text == "AccessDenied":
+        raise DatabaseAuthenticationError("Bucket cannot be accessed")
+    elif tree[0].text == "NoSuchBucket":
+        raise DatabaseConnectionError("Bucket does not exist")
+    contents = tree[5:]
+    for content in contents:
+        for child in content:
+            if "Key" in child.tag:
+                file = child.text
+                r1 = requests.get(url + file)
+                abs_path = os.path.join(path, file)
+                os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                with open(abs_path, 'wb') as f:
+                    f.write(r1.content)
+                count += 1
+                if count >= max_elements:
+                    return
+
 def extract_rethinkdb(ip, port, credentials=None):
     result = {}
     r = rethinkdb.RethinkDB()
@@ -159,7 +185,6 @@ def extract_rethinkdb(ip, port, credentials=None):
             raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
         except rethinkdb.errors.ReqlDriverError:
             raise DatabaseConnectionError("No rethinkDB instance found running at this address")
-
 
     databases = r.db_list().run()
     for database in databases:
@@ -264,7 +289,7 @@ def extract_database(database, ip, port, credentials=None):
     return dictionary
 
 
-extract_database("cassandradb","127.0.0.1","9042",["cassandra","cassandra"])
+extract_database("cassandradb", "127.0.0.1", "9042", ["cassandra", "cassandra"])
 
 '''
 res = extract_database("mongodb","127.0.0.1","27017")
