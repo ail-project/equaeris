@@ -1,4 +1,6 @@
 import pymongo
+import os
+import xml.etree.ElementTree as ET
 import redis
 import requests
 from bson.json_util import dumps
@@ -154,6 +156,29 @@ def extract_mongodb(ip, port, credentials=None, max_elements=5000):
                         return result
     return result
 
+def extract_bucket(bucketname, max_elements):
+    count = 0
+    path = os.path.dirname(__file__)
+    url = "http://" + bucketname + ".s3.amazonaws.com/"
+    r = requests.get(url)
+    tree = ET.fromstring(r.text)
+    if tree[0].text == "AccessDenied":
+        raise DatabaseAuthenticationError("Bucket cannot be accessed")
+    elif tree[0].text == "NoSuchBucket":
+        raise DatabaseConnectionError("Bucket does not exist")
+    contents = tree[5:]
+    for content in contents:
+        for child in content:
+            if "Key" in child.tag:
+                file = child.text
+                r1 = requests.get(url + file)
+                abs_path = os.path.join(path, file)
+                os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                with open(abs_path, 'wb') as f:
+                    f.write(r1.content)
+                count += 1
+                if count >= max_elements:
+                    return
 
 def extract_rethinkdb(ip, port, credentials=None, max_elements=5000):
     result = {}
