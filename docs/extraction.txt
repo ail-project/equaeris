@@ -5,9 +5,13 @@ dump_contents(): writes python dictionary in json format to a file
 
 extract_database(): extracts contents of database 
 	Arguments:
-		string database: the name of the database that is targeted
+		string database - the name of the database that is targeted
 		string ip - The ip at which the targeted database resides
 		string port - The port on which the targeted database runs
-		list credentials - list containing username and password or only password. By default None if database doesn't require credentials. 
+		list credentials - list containing username and password or only password. By default None if database doesn't require credentials.
+		int max_elements - number of elements that can be extracted before the script returns, default is 5000 which should cause no problems, however caution should be applied when using this default with couchDB or amazon s3 because these scripts also extract files
 	Returns:
 		dictionary with the content of the database
+    Raises:
+        DatabaseConnectionError if no database can be found at the specified address
+        DatabaseAuthenticationError if provided credentials don't access the database

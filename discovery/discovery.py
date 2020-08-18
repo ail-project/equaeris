@@ -119,7 +119,6 @@ def cassandra_access_test(aggressive, ip, port):
         cluster.connect()
         return True, None
     except cassandra.cluster.NoHostAvailable as err:
-        print(type(err.errors[ip + ":" + port]))
         if type(err.errors[ip + ":" + port]) == cassandra.AuthenticationFailed:
             if not aggressive:
                 return False, None
