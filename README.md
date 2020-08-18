@@ -43,7 +43,7 @@ res and res1 are dictionaries containing a representation of the databases. dump
 You can also use extract_cassandra() and extract_mongodb() with the same parameters to extract the database contents.
 
 ### Discovery and Extraction together
-If you want to extract everything from every open database on a server, and them the result into json files, you can use this script to achieve this:
+If you want to extract everything from every open database on a server, and put the result into json files, you can use this script to achieve this:
 ```python
 import discovery  
 import extraction  
