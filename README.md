@@ -22,8 +22,8 @@ redis_access_test(True,"IP","port")
 mongodb_access_test(True,"IP","port")
 cassandradb_access_test(True,"IP","port")
 ```
-In this case, each function returns a tuple where the first element is either True or False based on whether access to the database has been achieved and the second element contains the potential credentials with which the access has been achieved
- Example for a default password protected cassandraDB instance:
+In this case, each function returns a tuple where the first element is either True or False based on whether access to the database has been achieved and the second element contains the potential credentials with which the access has been achieved.
+Example for a default password protected cassandraDB instance:
 ```python
 (True, ('cassandra', 'cassandra'))
 ```
