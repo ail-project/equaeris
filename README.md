@@ -2,7 +2,7 @@
 ## TL;DR
 equaeris is a modular scanner to find open databases and extract their content
 ## Description
-equaeris is subdivided into two big modules, one for discovery and one for extraction. Based on the needs they can either be used by themselves or be combined. Right now the supported databases are MongoDB, redis, RethinkDB, CassandraDB, CouchDB and elasticsearch.
+equaeris is subdivided into two big modules, one for discovery and one for extraction. Based on the needs they can either be used by themselves or be combined. Right now the supported databases are MongoDB, redis, RethinkDB, CassandraDB, CouchDB, elasticsearch and amazon s3.
 ## Example
 ### Discovery
 Imagine a server that is running an open mongoDB instance, a default password protected cassandraDB instance and a non-default password protected redis instance. To check which databases are open and unprotected, you can either use automatic_discovery() when you already have a nmap xml file or call the individual database access functions.
