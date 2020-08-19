@@ -27,6 +27,13 @@ In this case, each function returns a tuple where the first element is either Tr
 ```python
 (True, ('cassandra', 'cassandra'))
 ```
+
+#### bucket_access_test
+Separate to the other access scripts because it only requires a bucketname and returns either True or False based on whether the bucket is publicly accessible
+```python
+bucket_access_test("ims-photos")
+```
+
 ### Extraction
 To extract the content of a specific database you can either call the generic extract_database function or one of the specific functions geared towards each database. The extract_database function will print a snapshot of the first few key:value pairs of each database.
 
@@ -41,7 +48,17 @@ dump_contents(res1,"cassandraDB.json")
 res and res1 are dictionaries containing a representation of the databases. dump_contents() writes them to a json file for further investigation.
 #### specific functions
 You can also use extract_cassandra() and extract_mongodb() with the same parameters to extract the database contents.
-
+Amazon s3 and ftp are separate from the general databases because they mostly contain files.
+#### extract_bucket
+This function extracts a specified number of files from an open amazon s3 instance
+```python
+extract_bucket("ims-photos", 5) # extracts five files from the ims-photos bucket
+```
+#### extract_ftp
+This function extracts a specified number of files from a ftp server
+```python
+extract_ftp("127.0.0.1","21",["anonymous","anonymous"],30) #tries to extract 30 files from a ftp server by authenticating as anonymous
+```
 ### Discovery and Extraction together
 If you want to extract everything from every open database on a server, and them the result into json files, you can use this script to achieve this:
 ```python

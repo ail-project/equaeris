@@ -8,6 +8,7 @@ import cassandra
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 import rethinkdb
+import ftplib
 
 
 class DatabaseConnectionError(Exception):
@@ -57,7 +58,7 @@ def couchdb_access_test(aggressive, ip, port):
     try:
         r = requests.get(url)
     except requests.exceptions.ConnectionError:
-        raise DatabaseConnectionError("no couchDB instance found running at this address")
+        raise DatabaseConnectionError("No couchDB instance found running at this address")
     res = r.json()
     if 'error' in res:
         if aggressive:
@@ -79,7 +80,7 @@ def elastic_access_test(aggressive, ip, port):
     try:
         r = requests.get(url)
     except requests.exceptions.ConnectionError:
-        raise DatabaseConnectionError("no elasticsearch instance found running at this address")
+        raise DatabaseConnectionError("No elasticsearch instance found running at this address")
     res = r.json()
     if 'error' in res:
         if aggressive:
@@ -93,6 +94,26 @@ def elastic_access_test(aggressive, ip, port):
             return False, None
     else:
         return True, None
+
+
+def ftp_access_test(aggressive, ip, port):
+    ftp = ftplib.FTP()
+    try:
+        ftp.connect(ip, int(port))
+    except ConnectionRefusedError:
+        raise DatabaseConnectionError("No ftp server instance found running at this address")
+    try:
+        ftp.login("anonymous", "anonymous")
+        return True, ("anonymous", "anonymous")
+    except ftplib.error_perm:
+        if aggressive:
+            try:
+                ftp.login("admin", "admin")
+                return True,("admin", "admin")
+            except ftplib.error_perm:
+                return False, None
+        else:
+            return False, None
 
 
 def rethinkdb_access_test(aggressive, ip, port):
@@ -110,7 +131,7 @@ def rethinkdb_access_test(aggressive, ip, port):
         else:
             return False, None
     except rethinkdb.errors.ReqlDriverError:
-        raise DatabaseConnectionError("no rethinkDB instance found running at this address")
+        raise DatabaseConnectionError("No rethinkDB instance found running at this address")
 
 
 def cassandra_access_test(aggressive, ip, port):
@@ -131,7 +152,7 @@ def cassandra_access_test(aggressive, ip, port):
                 except cassandra.cluster.NoHostAvailable:
                     return False, None
         elif type(err.errors[ip + ":" + port]) == ConnectionRefusedError:
-            raise DatabaseConnectionError("no cassandraDB instance found running at this address")
+            raise DatabaseConnectionError("No cassandraDB instance found running at this address")
 
 
 def mongodb_access_test(aggressive, ip, port):
@@ -153,7 +174,7 @@ def mongodb_access_test(aggressive, ip, port):
         else:
             return False, None
     except pymongo.errors.ServerSelectionTimeoutError:
-        raise DatabaseConnectionError("no mongoDB instance found running at this address")
+        raise DatabaseConnectionError("No mongoDB instance found running at this address")
 
 
 def redis_access_test(aggressive, ip, port):
@@ -173,11 +194,11 @@ def redis_access_test(aggressive, ip, port):
         else:
             return False, None
     except redis.exceptions.ConnectionError:
-        raise DatabaseConnectionError("no redis instance found running at this address")
+        raise DatabaseConnectionError("No redis instance found running at this address")
 
 
 mapping = {"redis": redis_access_test, "mongodb": mongodb_access_test, "rethinkdb": rethinkdb_access_test,
-           "cassandradb": cassandra_access_test, "elasticsearch": elastic_access_test, "couchdb": couchdb_access_test}
+           "cassandradb": cassandra_access_test, "elasticsearch": elastic_access_test, "couchdb": couchdb_access_test, "ftp": ftp_access_test}
 
 
 def access_test(service, aggressive, ip, port):

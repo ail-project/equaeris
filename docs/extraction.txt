@@ -3,15 +3,36 @@ dump_contents(): writes python dictionary in json format to a file
 		dictionary data - The dictionary that should be written in the json format to a file
 		string outputfile - The path of the file that the dictionary is written to
 
+
 extract_database(): extracts contents of database 
 	Arguments:
 		string database - the name of the database that is targeted
 		string ip - The ip at which the targeted database resides
 		string port - The port on which the targeted database runs
 		list credentials - list containing username and password or only password. By default None if database doesn't require credentials.
-		int max_elements - number of elements that can be extracted before the script returns, default is 5000 which should cause no problems, however caution should be applied when using this default with couchDB or amazon s3 because these scripts also extract files
+		int max_elements - number of elements that can be extracted before the script returns, default is 5000 which should cause no problems, however caution should be applied when using this default with couchDB because this script also extracts files
 	Returns:
 		dictionary with the content of the database
     Raises:
         DatabaseConnectionError if no database can be found at the specified address
         DatabaseAuthenticationError if provided credentials don't access the database
+
+
+extract_ftp(): extracts files of ftp server
+    Arguments:
+        string ip - The ip at which the targeted database resides
+		string port - The port on which the targeted database runs
+        list credentials - list containing username and password or only password. By default ["anonymous", "anonymous"]
+        int max_elements - number of files that can be downloaded before the script returns, default is 500
+    Raises:
+        DatabaseConnectionError if no ftp server can be found at the specified address
+        DatabaseAuthenticationError if provided credentials don't access the ftp server
+
+
+extract_bucket(): extracts files from an amazon s3 bucket
+    Arguments:
+        string bucketname - The name of the amazon s3 bucket which the files should be extracted from
+        int max_elements - number of files that can be downloaded before the script returns
+    Raises:
+        DatabaseConnectionError if no bucket of that name could be found
+        DatabaseAuthenticationError if the specified bucket isn't publicly accessible

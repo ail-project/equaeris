@@ -9,6 +9,7 @@ import rethinkdb
 import cassandra
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
+import ftplib
 
 
 class DatabaseAuthenticationError(Exception):
@@ -24,6 +25,48 @@ class DatabaseConnectionError(Exception):
 def dump_contents(data, outputfile):
     with open(outputfile, 'w') as outfile:
         outfile.write(dumps(data))
+
+
+def extract_ftp(ip, port, credentials = ["anonymous", "anonymous"], max_elements=500):
+    global count_ftp
+    count_ftp = 0
+    ftp = ftplib.FTP()
+    try:
+        ftp.connect(ip, int(port))
+    except ConnectionRefusedError:
+        raise DatabaseConnectionError("No ftp server instance found running at this address")
+    try:
+        ftp.login(credentials[0], credentials[1])
+    except ftplib.error_perm:
+        raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
+    extract_dir(ftp, max_elements)
+
+
+def get_file(ftp, filename):
+    ftp.retrbinary("RETR " + filename, open(filename, 'wb').write)
+
+
+def extract_dir(ftp, max_elements, directory=None, old_dir=None):
+    global count_ftp
+    if directory is not None:
+        ftp.cwd(directory)
+    data = []
+    ftp.dir(data.append)
+    for element in data:
+        if element[0] == 'd':
+            directory = element.split(" ")[-1]
+            if directory is not None and count_ftp <= max_elements:
+                extract_dir(ftp, max_elements, directory + "/" + directory, directory)
+            elif count_ftp <= max_elements:
+                extract_dir(ftp, max_elements, "/" + directory)
+        else:
+            filename = element.split(" ")[-1]
+            get_file(ftp, filename)
+            count_ftp += 1
+        if count_ftp >= max_elements:
+            return
+    if old_dir is not None:
+        ftp.cwd(old_dir)
 
 
 def extract_couchdb(ip, port, credentials=None, max_elements=5000):
@@ -156,6 +199,7 @@ def extract_mongodb(ip, port, credentials=None, max_elements=5000):
                         return result
     return result
 
+
 def extract_bucket(bucketname, max_elements):
     count = 0
     path = os.path.dirname(__file__)
@@ -179,6 +223,7 @@ def extract_bucket(bucketname, max_elements):
                 count += 1
                 if count >= max_elements:
                     return
+
 
 def extract_rethinkdb(ip, port, credentials=None, max_elements=5000):
     result = {}
@@ -310,7 +355,7 @@ def extract_database(database, ip, port, credentials=None, max_elements=5000):
     return dictionary
 
 
-extract_database("cassandradb", "127.0.0.1", "9042", ["cassandra", "cassandra"])
+extract_ftp("127.0.0.1", "21", ["anonymous", "anonymous"], 2)
 
 '''
 res = extract_database("mongodb","127.0.0.1","27017")

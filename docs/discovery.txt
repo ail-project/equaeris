@@ -4,6 +4,7 @@ parse_nmap(): returns a list containing all open ports, given an nmap xml file
 	Returns:
 		A list containing all open port numbers
 
+
 database_check(): checks dictionary of targeted services if anyone of them is open and returns the concerned services
 	Arguments:
 		list open_ports - A list containing all open port numbers
