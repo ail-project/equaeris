@@ -2,7 +2,7 @@
 ## TL;DR
 equaeris is a modular scanner to find open databases and extract their content
 ## Description
-equaeris is subdivided into two big modules, one for discovery and one for extraction. Based on the needs they can either be used by themselves or be combined. Right now the supported databases are MongoDB, redis, RethinkDB, CassandraDB, CouchDB and elasticsearch.
+equaeris is subdivided into two big modules, one for discovery and one for extraction. Based on the needs they can either be used by themselves or be combined. Right now the supported databases are MongoDB, redis, RethinkDB, CassandraDB, CouchDB, elasticsearch and amazon s3.
 ## Example
 ### Discovery
 Imagine a server that is running an open mongoDB instance, a default password protected cassandraDB instance and a non-default password protected redis instance. To check which databases are open and unprotected, you can either use automatic_discovery() when you already have a nmap xml file or call the individual database access functions.
@@ -22,8 +22,8 @@ redis_access_test(True,"IP","port")
 mongodb_access_test(True,"IP","port")
 cassandradb_access_test(True,"IP","port")
 ```
-In this case, each function returns a tuple where the first element is either True or False based on whether access to the database has been achieved and the second element contains the potential credentials with which the access has been achieved
- Example for a default password protected cassandraDB instance:
+In this case, each function returns a tuple where the first element is either True or False based on whether access to the database has been achieved and the second element contains the potential credentials with which the access has been achieved.
+Example for a default password protected cassandraDB instance:
 ```python
 (True, ('cassandra', 'cassandra'))
 ```
@@ -60,7 +60,7 @@ This function extracts a specified number of files from a ftp server
 extract_ftp("127.0.0.1","21",["anonymous","anonymous"],30) #tries to extract 30 files from a ftp server by authenticating as anonymous
 ```
 ### Discovery and Extraction together
-If you want to extract everything from every open database on a server, and them the result into json files, you can use this script to achieve this:
+If you want to extract everything from every open database on a server, and put the result into json files, you can use this script to achieve this:
 ```python
 import discovery  
 import extraction  
