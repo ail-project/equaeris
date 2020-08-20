@@ -66,5 +66,7 @@ def extract_dir(ftp, max_elements, dir=None, old_dir=None):
         ftp.cwd(old_dir)
 
 
+'''
 print(ftp_access_test(True, "127.0.0.1", "21"))
 extract_ftp("127.0.0.1", "21", ("anonymous", "anonymous"), 2)
+'''

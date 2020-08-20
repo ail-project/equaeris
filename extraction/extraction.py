@@ -42,8 +42,14 @@ def extract_ftp(ip, port, credentials = ["anonymous", "anonymous"], max_elements
     extract_dir(ftp, max_elements)
 
 
-def get_file(ftp, filename):
-    ftp.retrbinary("RETR " + filename, open(filename, 'wb').write)
+def get_file(ftp, filename, directory):
+    path = os.getcwd()
+    path = os.path.join(path, "results")
+    if directory is not None:
+        path += directory
+    path = os.path.join(path, filename)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    ftp.retrbinary("RETR " + filename, open(path, 'wb').write)
 
 
 def extract_dir(ftp, max_elements, directory=None, old_dir=None):
@@ -54,14 +60,14 @@ def extract_dir(ftp, max_elements, directory=None, old_dir=None):
     ftp.dir(data.append)
     for element in data:
         if element[0] == 'd':
-            directory = element.split(" ")[-1]
+            folder = element.split(" ")[-1]
             if directory is not None and count_ftp <= max_elements:
-                extract_dir(ftp, max_elements, directory + "/" + directory, directory)
+                extract_dir(ftp, max_elements, directory + "/" + folder, directory)
             elif count_ftp <= max_elements:
-                extract_dir(ftp, max_elements, "/" + directory)
+                extract_dir(ftp, max_elements, "/" + folder)
         else:
             filename = element.split(" ")[-1]
-            get_file(ftp, filename)
+            get_file(ftp, filename, directory)
             count_ftp += 1
         if count_ftp >= max_elements:
             return
@@ -202,7 +208,8 @@ def extract_mongodb(ip, port, credentials=None, max_elements=5000):
 
 def extract_bucket(bucketname, max_elements):
     count = 0
-    path = os.path.dirname(__file__)
+    path = os.getcwd()
+    path = os.path.join(path,"results")
     url = "http://" + bucketname + ".s3.amazonaws.com/"
     r = requests.get(url)
     tree = ET.fromstring(r.text)
@@ -355,7 +362,8 @@ def extract_database(database, ip, port, credentials=None, max_elements=5000):
     return dictionary
 
 
-extract_ftp("127.0.0.1", "21", ["anonymous", "anonymous"], 2)
+extract_ftp("10.10.123.114", "21", ["anonymous", "anonymous"], 10)
+# extract_bucket("ims-photos", 5)
 
 '''
 res = extract_database("mongodb","127.0.0.1","27017")

@@ -214,4 +214,4 @@ def automatic_discovery(nmap_file, ip, aggressive):
     return result
 
 
-print(bucket_access_test("ims-photos"))
+print(ftp_access_test(True, "10.10.123.114", 21))
