@@ -50,12 +50,12 @@ res and res1 are dictionaries containing a representation of the databases. dump
 You can also use extract_cassandra() and extract_mongodb() with the same parameters to extract the database contents.
 Amazon s3 and ftp are separate from the general databases because they mostly contain files.
 #### extract_bucket
-This function extracts a specified number of files from an open amazon s3 instance
+This function extracts a specified number of files from an open amazon s3 instance and puts them inside a results folder in your current directory.
 ```python
 extract_bucket("ims-photos", 5) # extracts five files from the ims-photos bucket
 ```
 #### extract_ftp
-This function extracts a specified number of files from a ftp server
+This function extracts a specified number of files from a ftp server and puts them inside a results folder in your current directory.
 ```python
 extract_ftp("127.0.0.1","21",["anonymous","anonymous"],30) #tries to extract 30 files from a ftp server by authenticating as anonymous
 ```

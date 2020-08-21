@@ -76,6 +76,8 @@ def extract_dir(ftp, max_elements, directory=None, old_dir=None):
 
 
 def extract_couchdb(ip, port, credentials=None, max_elements=5000):
+    path = os.getcwd()
+    path = os.path.join(path, "results")
     result = {}
     count = 0
     if credentials is not None:
@@ -108,7 +110,8 @@ def extract_couchdb(ip, port, credentials=None, max_elements=5000):
                     attachments = data["_attachments"]
                     for file in attachments:
                         r = requests.get(url + '/' + database + '/' + iden + '/' + file)
-                        outputfile = file
+                        outputfile = os.path.join(path,file)
+                        os.makedirs(outputfile, exist_ok=True)
                         open(outputfile, "wb").write(r.content)
 
     return result
