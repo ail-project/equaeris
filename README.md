@@ -48,7 +48,7 @@ dump_contents(res1,"cassandraDB.json")
 res and res1 are dictionaries containing a representation of the databases. dump_contents() writes them to a json file for further investigation.
 #### specific functions
 You can also use extract_cassandra() and extract_mongodb() with the same parameters to extract the database contents.
-Amazon s3 and ftp are separate from the general databases because they mostly contain files.
+Amazon s3 and ftp are separate from the general databases because they mostly contain files. CouchDB can also contain attachments which the scripts extracts into a results folder.
 #### extract_bucket
 This function extracts a specified number of files from an open amazon s3 instance and puts them inside a results folder in your current directory.
 ```python
