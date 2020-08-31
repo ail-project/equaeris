@@ -33,6 +33,7 @@ def extract_ftp(ip, port, credentials, max_elements=500):
         ftp.login(credentials[0], credentials[1])
     except ftplib.error_perm:
         raise
+    ftp.set_pasv(False)
     extract_dir(ftp, max_elements)
 
 
@@ -66,7 +67,7 @@ def extract_dir(ftp, max_elements, dir=None, old_dir=None):
         ftp.cwd(old_dir)
 
 
-'''
-print(ftp_access_test(True, "127.0.0.1", "21"))
-extract_ftp("127.0.0.1", "21", ("anonymous", "anonymous"), 2)
-'''
+
+print(ftp_access_test(True, "10.10.2.97", "21"))
+extract_ftp("10.10.2.97", "21", ("anonymous", "anonymous"), 2)
+

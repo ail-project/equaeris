@@ -39,6 +39,14 @@ def extract_ftp(ip, port, credentials = ["anonymous", "anonymous"], max_elements
         ftp.login(credentials[0], credentials[1])
     except ftplib.error_perm:
         raise DatabaseAuthenticationError("Could not authenticate with provided credentials")
+    data = []
+    try:
+        ftp.dir(data.append)
+    except ftplib.error_perm:
+        ftp = ftplib.FTP()
+        ftp.connect(ip, int(port))
+        ftp.login(credentials[0], credentials[1])
+        ftp.set_pasv(False)
     extract_dir(ftp, max_elements)
 
 
@@ -70,9 +78,12 @@ def extract_dir(ftp, max_elements, directory=None, old_dir=None):
             get_file(ftp, filename, directory)
             count_ftp += 1
         if count_ftp >= max_elements:
+            ftp.quit()
             return
     if old_dir is not None:
         ftp.cwd(old_dir)
+    else:
+        ftp.cwd("/")
 
 
 def extract_couchdb(ip, port, credentials=None, max_elements=5000):
@@ -365,7 +376,7 @@ def extract_database(database, ip, port, credentials=None, max_elements=5000):
     return dictionary
 
 
-extract_ftp("10.10.123.114", "21", ["anonymous", "anonymous"], 10)
+extract_ftp("10.10.212.196", "21", ["anonymous", "anonymous"], 10)
 # extract_bucket("ims-photos", 5)
 
 '''
