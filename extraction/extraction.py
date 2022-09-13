@@ -219,6 +219,19 @@ def extract_mongodb(ip, port, credentials=None, max_elements=5000):
                         return result
     return result
 
+# extract aws object - url * 2
+# s3://first-ctf-2022-files/first2022-hacker-nextcloud.tgz
+# https://first-ctf-2022-files.s3.eu-west-1.amazonaws.com/first2022-hacker-nextcloud.tgz
+
+def extract_aws_s3_object(bucketname, object_name):
+    count = 0
+    path = os.getcwd()
+    path = os.path.join(path,"results")
+    url = f'http://{bucketname}.s3.amazonaws.com/{object_name}'
+    r = requests.get(url)
+    if r.status_code == 403:
+        raise Exception(f'403 Forbidden')
+    return r.content
 
 def extract_bucket(bucketname, max_elements):
     count = 0
@@ -376,8 +389,9 @@ def extract_database(database, ip, port, credentials=None, max_elements=5000):
     return dictionary
 
 
-extract_ftp("10.10.212.196", "21", ["anonymous", "anonymous"], 10)
+#extract_ftp("10.10.212.196", "21", ["anonymous", "anonymous"], 10)
 # extract_bucket("ims-photos", 5)
+#print(res)
 
 '''
 res = extract_database("mongodb","127.0.0.1","27017")
